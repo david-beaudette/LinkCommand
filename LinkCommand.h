@@ -9,7 +9,6 @@
 #include <EEPROM.h>
 #include "Arduino.h"
 
-#include "RF24.h"
 #include "nano_rfid_hal.h"
 #include "AccessEvent.h"
 #include "AccessTable.h"
@@ -20,22 +19,21 @@
 #define TABLE_UPDATE_ADDED 0xD3
 #define TABLE_UPDATE_FULL  0xDF
 
-// Communication link parameters
-#define LINK_WAIT_NUMRETRY 1024*1024
-
 class LinkCommand {
   public:
-    LinkCommand(RF24 *radio, 
-                AccessTable *table, 
+    LinkCommand(AccessTable *table, 
                 EventList *event_list);
-    int processCommand(sys_state_t *systemState);
+    int processCommand(byte *cmd, 
+                       byte *reply, 
+                       byte *reply_len, 
+                       sys_state_t *systemState);
     
   private:
-    int replyOk(void);
-    int dumpLogging(void);
-    int tableUpdate(void);
-    int checkMemory(void);
-    RF24 *_radio; 
+    int dumpLogging(byte *reply, byte *reply_len);
+    int tableUpdate(byte *cmd, 
+                    byte *reply, 
+                    byte *reply_len);
+    int checkMemory(byte *reply, byte *reply_len);
     AccessTable *_table; 
     EventList *_event_list;
 };

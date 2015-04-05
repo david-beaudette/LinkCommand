@@ -165,6 +165,16 @@ public:
    * @param size The number of bytes in the payload
    */
   void setPayloadSize(uint8_t size)  {return;}
+  
+  /**
+   * Get Dynamic Payload Size
+   *
+   * For dynamic payloads, this pulls the size of the payload off
+   * the chip
+   *
+   * @return Payload length of last-received dynamic payload
+   */
+  uint8_t getDynamicPayloadSize(void) {return 0;}
 
   /**
    * Enable dynamically-sized payloads
