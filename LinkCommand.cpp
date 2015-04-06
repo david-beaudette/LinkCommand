@@ -6,12 +6,12 @@
 
 #include "LinkCommand.h"
 
+/** Set internal pointers to access table and event list. **/
 LinkCommand::LinkCommand(AccessTable *table, 
                          EventList *event_list) {
   // Assign class pointers                             
   _table = table;
   _event_list = event_list;  
-  
 }
 
 /**
@@ -30,58 +30,57 @@ int LinkCommand::processCommand(byte *cmd,
                                 sys_state_t *systemState) { 
 
   switch(cmd[0]) {
-    case 0xA0:
+    case CMD_AUTO:
       // Switch to auto mode if enabled or disabled
       if(*systemState < ACTIVATED) {*systemState = IDLE;}
-      reply[0]  = 0xAF;
-      *reply_len = 0x01;
+      reply[0]  = REPLY_OK;
+      *reply_len = 1;
       return 1;
       
-    case 0xA1:
+    case CMD_ENABLE:
       // Switch to enabled mode
       *systemState = ENABLED;
-      reply[0]  = 0xAF;
-      *reply_len = 0x01;
+      reply[0]  = REPLY_OK;
+      *reply_len = 1;
       return 1;
       
-    case 0xA2:
+    case CMD_DISABLE:
       // Switch to disabled mode
       *systemState = DISABLED;
-      reply[0]  = 0xAF;
-      *reply_len = 0x01;
+      reply[0]  = REPLY_OK;
+      *reply_len = 1;
       return 1;
       
-    case 0xA3:
+    case CMD_DUMPLOGGING:
       // More elaborate command managed in its own routine
       return this->dumpLogging(reply, reply_len);
       
-    case 0xA4:
+    case CMD_UPDATETABLE:
       // More elaborate command managed in its own routine
       return this->tableUpdate(cmd, reply, reply_len);
            
-    case 0xA5:
+    case CMD_MEMORYCHECK:
       // More elaborate command managed in its own routine
       return this->checkMemory(reply, reply_len);
       
-    case 0xA6:
+    case CMD_MEMORYCLEAR:
       _table->clearTable(); 
-      reply[0]  = 0xAF;
-      *reply_len = 0x01;
+      reply[0]  = REPLY_OK;
+      *reply_len = 1;
       return 1;
       
     default:
-      *reply_len = 0x00;
+      *reply_len = 0;
       return -1;
   }
 }
 
-
-// Process a series of table update commands
+/** Process a single dump logging command. **/
 int LinkCommand::dumpLogging(byte *reply, byte *reply_len) {
   AccessEvent *event_ptr;
   // This shall send back:
   // [0] the current state of the Arduino
-  // [1] the dump logging command code 0xA3
+  // [1] the dump logging command code
   // [2] number of remaining events, including the event currently sent
   // [3] event type:
   //    0x30 : ‘Attempt’ (first authorization in double authorization mode).
@@ -91,9 +90,9 @@ int LinkCommand::dumpLogging(byte *reply, byte *reply_len) {
   //    0x34 : ‘Unknown’ (unknown user card detected).
   // [4-7] user tag for this event
   // [8] number of seconds elapsed since event happened
-  *reply_len = 0x09;
-  reply[0]  = 0xAF;
-  reply[1]  = 0xA3;
+  *reply_len = 9;
+  reply[0]  = REPLY_OK;
+  reply[1]  = CMD_DUMPLOGGING;
   
   // Validate list size has at least one logged event
   int list_size = _event_list->getListSize();
@@ -116,7 +115,7 @@ int LinkCommand::dumpLogging(byte *reply, byte *reply_len) {
   return 1;
 }
 
-// Process a series of table update commands
+/** Process a single table update command. **/
 int LinkCommand::tableUpdate(byte *cmd, 
                              byte *reply, 
                              byte *reply_len) {
@@ -131,16 +130,16 @@ int LinkCommand::tableUpdate(byte *cmd,
   // First check that the number of table entries is not 0 (error)
   int table_count = cmd[1];
   if(table_count == 0) {
-    *reply_len = 0x00;
+    *reply_len = 0;
     return -1;
   }
   // The transmit buffer should contain:
   // [0] the current state of the Arduino
   // [1] the table update command code
   // [2] to be set to the update result
-  reply[0] = 0xAF;
-  reply[1] = 0xA4;
-  *reply_len = 0x03;
+  reply[0] = REPLY_OK;
+  reply[1] = CMD_UPDATETABLE;
+  *reply_len = 3;
   
   // Update user entry in table
   if(_table->getUserAuth(&cmd[3]) < 0) {
@@ -168,6 +167,7 @@ int LinkCommand::tableUpdate(byte *cmd,
   return 7;
 }
 
+/** Process a single check memory command. **/
 int LinkCommand::checkMemory(byte *reply, byte *reply_len) {
   unsigned int lsb, msb;
   // Initialize transmit buffer with:
@@ -177,17 +177,24 @@ int LinkCommand::checkMemory(byte *reply, byte *reply_len) {
   // [3] MSB of the total number of users allowed in table
   // [4] LSB of the current number of users in table
   // [5] MSB of the current number of users in table
-  reply[0] = 0xAF;
-  reply[1] = 0xA5;
-  *reply_len = 0x06;
+  reply[0] = REPLY_OK;
+  reply[1] = CMD_MEMORYCHECK;
+  *reply_len = 6;
   
   // Retrieve table usage
   _table->getNumUsers(&lsb, &msb);
-  reply[2] = MAX_USER_SIZE & 0xFF;
-  reply[3] = (MAX_USER_SIZE & 0xFF00) << 8;
-  reply[4] = lsb & 0xFF;
-  reply[5] = msb & 0xFF;
-
+  reply[2] = (MAX_USER_SIZE & 0xFF00) << 8;
+  reply[3] = MAX_USER_SIZE & 0xFF;
+  reply[4] = msb & 0xFF;
+  reply[5] = lsb & 0xFF;
+  /*Serial.print(F("Memory size: MSB "));
+  Serial.print(reply[2]);
+  Serial.print(F(", LSB "));
+  Serial.println(reply[3]);
+  Serial.print(F("Memory used: MSB "));
+  Serial.print(reply[4]);
+  Serial.print(F(", LSB "));
+  Serial.println(reply[5]);*/
   // 1 byte was processed for this command
   return 1;
 }
