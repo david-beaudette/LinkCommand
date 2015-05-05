@@ -26,7 +26,8 @@ class LinkCommand {
     int processCommand(byte *cmd, 
                        byte *reply, 
                        byte *reply_len, 
-                       sys_state_t *systemState);
+                       sys_state_t *system_state,
+                       act_mode_t *act_mode);
     
   private:
     int dumpLogging(byte *reply, byte *reply_len);

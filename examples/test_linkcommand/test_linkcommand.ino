@@ -35,6 +35,7 @@ LinkCommand link(&table, &eventList);
 
 // System state variable
 sys_state_t state; 
+act_mode_t  act_mode; 
 
 // Test configuration
 int num_test_events =  5; // Number of events logged before dump command is executed
@@ -78,6 +79,27 @@ void loop() {
   }
   else {
     Serial.println(F("ENABLE command test failed."));
+    test_output = -1;
+  }
+  if(CheckCheckCmd() == 0) {
+    Serial.println(F("CHECK command validated."));
+  }
+  else {
+    Serial.println(F("CHECK command test failed."));
+    test_output = -1;
+  }
+  if(CheckDoubleActCmd() == 0) {
+    Serial.println(F("DOUBLE ACTIVATION command validated."));
+  }
+  else {
+    Serial.println(F("DOUBLE ACTIVATION command test failed."));
+    test_output = -1;
+  }
+  if(CheckSingleActCmd() == 0) {
+    Serial.println(F("SINGLE ACTIVATION command validated."));
+  }
+  else {
+    Serial.println(F("SINGLE ACTIVATION command test failed."));
     test_output = -1;
   }
   if(CheckDisableCmd() == 0) {
@@ -137,7 +159,7 @@ int CheckAutoCmd() {
   // CMD_AUTO
   cmd[0] = CMD_AUTO;
   // Handle this command
-  prc_len = link.processCommand(cmd, reply, &reply_len, &state);
+  prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   
   // Check function outputs
   if(prc_len != 1) {
@@ -154,31 +176,31 @@ int CheckAutoCmd() {
   }
   // Check the effect of the command for each state
   state  = ENABLED;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != IDLE) {
     Serial.println(F("LinkCommand state not set properly by auto command."));
     test_output = -1;
   }
   state  = DISABLED;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != IDLE) {
     Serial.println(F("LinkCommand state not set properly by auto command."));
     test_output = -1;
   }
   state  = ACTIVATED;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != ACTIVATED) {
     Serial.println(F("LinkCommand state not set properly by auto command."));
     test_output = -1;
   }
   state  = IDLE;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != IDLE) {
     Serial.println(F("LinkCommand state not set properly by auto command."));
     test_output = -1;
   }
   state  = TRIGGEREDONCE;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != TRIGGEREDONCE) {
     Serial.println(F("LinkCommand state not set properly by auto command."));
     test_output = -1;
@@ -191,7 +213,7 @@ int CheckEnableCmd() {
  // CMD_ENABLE
   cmd[0] = CMD_ENABLE;
   // Handle this command
-  prc_len = link.processCommand(cmd, reply, &reply_len, &state);
+  prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   
   // Check function outputs
   if(prc_len != 1) {
@@ -208,31 +230,31 @@ int CheckEnableCmd() {
   }
   // Check the effect of the command for each state
   state  = ENABLED;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != ENABLED) {
     Serial.println(F("LinkCommand state not set properly by enable command."));
     test_output = -1;
   }
   state  = DISABLED;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != ENABLED) {
     Serial.println(F("LinkCommand state not set properly by enable command."));
     test_output = -1;
   }
   state  = ACTIVATED;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != ENABLED) {
     Serial.println(F("LinkCommand state not set properly by enable command."));
     test_output = -1;
   }
   state  = IDLE;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != ENABLED) {
     Serial.println(F("LinkCommand state not set properly by enable command."));
     test_output = -1;
   }
   state  = TRIGGEREDONCE;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != ENABLED) {
     Serial.println(F("LinkCommand state not set properly by enable command."));
     test_output = -1;
@@ -245,7 +267,7 @@ int CheckDisableCmd() {
   // CMD_DISABLE
   cmd[0] = CMD_DISABLE;
   // Handle this command
-  prc_len = link.processCommand(cmd, reply, &reply_len, &state);
+  prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   
   // Check function outputs
   if(prc_len != 1) {
@@ -262,35 +284,129 @@ int CheckDisableCmd() {
   }
   // Check the effect of the command for each state
   state  = ENABLED;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != DISABLED) {
     Serial.println(F("LinkCommand state not set properly by disable command."));
     test_output = -1;
   }
   state  = DISABLED;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != DISABLED) {
     Serial.println(F("LinkCommand state not set properly by disable command."));
     test_output = -1;
   }
   state  = ACTIVATED;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != DISABLED) {
     Serial.println(F("LinkCommand state not set properly by disable command."));
     test_output = -1;
   }
   state  = IDLE;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != DISABLED) {
     Serial.println(F("LinkCommand state not set properly by disable command."));
     test_output = -1;
   }
   state  = TRIGGEREDONCE;
-  link.processCommand(cmd, reply, &reply_len, &state);
+  link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   if(state != DISABLED) {
     Serial.println(F("LinkCommand state not set properly by disable command."));
     test_output = -1;
   } 
+  return test_output;
+}
+
+int CheckCheckCmd() {
+  int test_output = 0;
+  // CMD_CHECK
+  state  = ENABLED;
+  cmd[0] = CMD_CHECK;
+  // Handle this command
+  prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
+  
+  // Check function outputs
+  if(prc_len != 1) {
+    Serial.println(F("LinkCommand should return 1 processed byte for check command."));
+    test_output = -1;
+  }
+  if(reply_len != 1) {
+    Serial.println(F("LinkCommand should reply with 1 byte for check command."));
+    test_output = -1;
+  }
+  if(reply[0] != REPLY_OK) {
+    Serial.println(F("LinkCommand should reply Ok."));
+    test_output = -1;
+  }
+  if(state != ENABLED) {
+    Serial.println(F("LinkCommand state not set properly by check command."));
+    test_output = -1;
+  }
+  return test_output;
+}
+
+int CheckDoubleActCmd() {
+  int test_output = 0;
+  // CMD_DOUBLEACT
+  state  = ENABLED;
+  cmd[0] = CMD_DOUBLEACT;
+  act_mode = SINGLE;
+  // Handle this command
+  prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
+  
+  // Check function outputs
+  if(act_mode != DOUBLE) {
+    Serial.println(F("LinkCommand should set double activation mode."));
+    test_output = -1;
+  }
+  if(prc_len != 1) {
+    Serial.println(F("LinkCommand should return 1 processed byte for double activation command."));
+    test_output = -1;
+  }
+  if(reply_len != 1) {
+    Serial.println(F("LinkCommand should reply with 1 byte for double activation command."));
+    test_output = -1;
+  }
+  if(reply[0] != REPLY_OK) {
+    Serial.println(F("LinkCommand should reply Ok."));
+    test_output = -1;
+  }
+  if(state != ENABLED) {
+    Serial.println(F("LinkCommand state not set properly by double activation command."));
+    test_output = -1;
+  }
+  return test_output;
+}
+
+int CheckSingleActCmd() {
+  int test_output = 0;
+  // CMD_SIMPLEACT
+  state  = ENABLED;
+  cmd[0] = CMD_SIMPLEACT;
+  act_mode = DOUBLE;
+  // Handle this command
+  prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
+  
+  // Check function outputs
+  if(act_mode != SINGLE) {
+    Serial.println(F("LinkCommand should set single activation mode."));
+    test_output = -1;
+  }
+  if(prc_len != 1) {
+    Serial.println(F("LinkCommand should return 1 processed byte for single activation command."));
+    test_output = -1;
+  }
+  if(reply_len != 1) {
+    Serial.println(F("LinkCommand should reply with 1 byte for single activation command."));
+    test_output = -1;
+  }
+  if(reply[0] != REPLY_OK) {
+    Serial.println(F("LinkCommand should reply Ok."));
+    test_output = -1;
+  }
+  if(state != ENABLED) {
+    Serial.println(F("LinkCommand state not set properly by single activation command."));
+    test_output = -1;
+  }
   return test_output;
 }
 
@@ -300,7 +416,7 @@ int CheckMemoryClearCmd() {
   cmd[0] = CMD_MEMORYCLEAR;
   // Handle this command
   Serial.print(F("Clearing memory..."));
-  prc_len = link.processCommand(cmd, reply, &reply_len, &state);
+  prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   Serial.println(F(" done."));
 
   // Check function outputs
@@ -339,7 +455,7 @@ int CheckTableUpdateCmd() {
     cmd[6] = tag[3]+i;
     
     // Handle this command
-    prc_len = link.processCommand(cmd, reply, &reply_len, &state);
+    prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
     
     // Check function outputs
     if(prc_len != 7) {
@@ -382,7 +498,7 @@ int CheckTableUpdateCmd() {
     cmd[6] = tag[3]+i;
     
     // Handle this command
-    prc_len = link.processCommand(cmd, reply, &reply_len, &state);
+    prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
     
     // Check function outputs
     if(prc_len != 7) {
@@ -425,7 +541,7 @@ int CheckTableUpdateCmd() {
     cmd[6] = tag[3]+i;
     
     // Handle this command
-    prc_len = link.processCommand(cmd, reply, &reply_len, &state);
+    prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
     
     // Check function outputs
     if(prc_len != 7) {
@@ -466,7 +582,7 @@ int CheckMemoryCheckCmd() {
   int memory_used;
   // Process command
   cmd[0] = CMD_MEMORYCHECK;
-  prc_len = link.processCommand(cmd, reply, &reply_len, &state);
+  prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
   
   // Check function outputs
   if(prc_len != 1) {
@@ -531,7 +647,7 @@ int CheckDumpLoggingCmd() {
   
   for(int i = 0; i < num_test_events; i++) {
     // Handle this command
-    prc_len = link.processCommand(cmd, reply, &reply_len, &state);
+    prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
     
     // Check function outputs
     if(prc_len != 1) {

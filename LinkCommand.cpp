@@ -27,26 +27,47 @@ LinkCommand::LinkCommand(AccessTable *table,
 int LinkCommand::processCommand(byte *cmd, 
                                 byte *reply, 
                                 byte *reply_len, 
-                                sys_state_t *systemState) { 
+                                sys_state_t *system_state,
+                                act_mode_t  *act_mode) { 
 
   switch(cmd[0]) {
+    case CMD_CHECK:
+      // Just acknowledge with OK
+      reply[0]  = REPLY_OK;
+      *reply_len = 1;
+      return 1;
+      
+    case CMD_DOUBLEACT:
+      // Switch to double activation mode
+      *act_mode = DOUBLE;
+      reply[0]  = REPLY_OK;
+      *reply_len = 1;
+      return 1;
+      
+    case CMD_SIMPLEACT:
+      // Switch to double activation mode
+      *act_mode = SINGLE;
+      reply[0]  = REPLY_OK;
+      *reply_len = 1;
+      return 1;
+      
     case CMD_AUTO:
       // Switch to auto mode if enabled or disabled
-      if(*systemState < ACTIVATED) {*systemState = IDLE;}
+      if(*system_state < ACTIVATED) {*system_state = IDLE;}
       reply[0]  = REPLY_OK;
       *reply_len = 1;
       return 1;
       
     case CMD_ENABLE:
       // Switch to enabled mode
-      *systemState = ENABLED;
+      *system_state = ENABLED;
       reply[0]  = REPLY_OK;
       *reply_len = 1;
       return 1;
       
     case CMD_DISABLE:
       // Switch to disabled mode
-      *systemState = DISABLED;
+      *system_state = DISABLED;
       reply[0]  = REPLY_OK;
       *reply_len = 1;
       return 1;
