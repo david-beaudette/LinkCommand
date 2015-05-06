@@ -147,6 +147,14 @@ int LinkCommand::tableUpdate(byte *cmd,
   // [1] remaining table entries including this one
   // [2] if user is authorized (1) or not (0)
   // [3-6] user tag id
+    Serial.print(F("Tag to be updated: "));
+    for(int j = 0; j < 4; j++) {
+      Serial.print(cmd[3+j], HEX);
+      if(j < 3) {
+        Serial.print(", ");
+      }
+    }
+    Serial.println(" ");
   
   // First check that the number of table entries is not 0 (error)
   int table_count = cmd[1];
