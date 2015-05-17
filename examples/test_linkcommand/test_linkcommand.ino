@@ -642,10 +642,10 @@ int CheckDumpLoggingCmd() {
     delay(1000);
   }  
     
-  // Check what is returned by a dump logging command
-  cmd[0] = CMD_DUMPLOGGING;
-  
   for(int i = 0; i < num_test_events; i++) {
+    // Check what is returned by a dump logging command
+    cmd[0] = CMD_DUMPLOGGING;
+  
     // Handle this command
     prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
     
@@ -654,7 +654,7 @@ int CheckDumpLoggingCmd() {
       Serial.println(F("LinkCommand should return 1 processed byte for a dump logging command."));
       test_output = -1;
     }
-    if(reply_len != 9) {
+    if(reply_len != 12) {
       Serial.println(F("LinkCommand should reply with 9 bytes for a dump logging command."));
       test_output = -1;
     }
@@ -691,15 +691,31 @@ int CheckDumpLoggingCmd() {
       test_output = -1;
     }
     Serial.print("Event ");
-    Serial.print(i);
+    Serial.print(num_test_events-i);
     Serial.print(" elapsed time is ");
-    Serial.print(reply[8]);
+    int num_sec = reply[8] + 256 * (reply[9] + 256 * (reply[10] + 256 * reply[11]));
+    Serial.print(num_sec);
     Serial.println(" seconds.");
-    if(reply[8] != (num_test_events-i-1)) {
+    if(num_sec != (num_test_events-i-1)) {
       Serial.println("LinkCommand returned wrong elapsed time.");
+      test_output = -1;
+    }
+    // Check what is returned by an erase log command
+    cmd[0] = CMD_ERASELOG;
+    prc_len = link.processCommand(cmd, reply, &reply_len, &state, &act_mode);
+    // Check function outputs
+    if(prc_len != 1) {
+      Serial.println(F("LinkCommand should return 1 processed byte for erase log command."));
+      test_output = -1;
+    }
+    if(reply_len != 1) {
+      Serial.println(F("LinkCommand should reply with 1 byte for erase log command."));
+      test_output = -1;
+    }
+    if(reply[0] != REPLY_OK) {
+      Serial.println(F("LinkCommand should reply Ok."));
       test_output = -1;
     }
   }
   return test_output;
 }
-

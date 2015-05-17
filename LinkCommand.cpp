@@ -22,7 +22,7 @@ LinkCommand::LinkCommand(AccessTable *table,
   contained more than one command.
   
   @return >0: the number of bytes processed\n
-          -1: an error has occured while processing
+          -1: an error has occurred while processing
 **/
 int LinkCommand::processCommand(byte *cmd, 
                                 byte *reply, 
@@ -90,6 +90,12 @@ int LinkCommand::processCommand(byte *cmd,
       *reply_len = 1;
       return 1;
       
+    case CMD_ERASELOG:
+      _event_list->eraseEvent(); 
+      reply[0]  = REPLY_OK;
+      *reply_len = 1;
+      return 1;
+      
     default:
       *reply_len = 0;
       return -1;
@@ -110,8 +116,8 @@ int LinkCommand::dumpLogging(byte *reply, byte *reply_len) {
   //    0x33 : ‘Fail’    (unauthorized user card detected).
   //    0x34 : ‘Unknown’ (unknown user card detected).
   // [4-7] user tag for this event
-  // [8] number of seconds elapsed since event happened
-  *reply_len = 9;
+  // [8-11] number of seconds elapsed since event happened (4 bytes)
+  *reply_len = 12;
   reply[0]  = REPLY_OK;
   reply[1]  = CMD_DUMPLOGGING;
   
@@ -124,13 +130,16 @@ int LinkCommand::dumpLogging(byte *reply, byte *reply_len) {
   }
   // Retrieve event from list and prepare buffer
   event_ptr = _event_list->getEvent();
-  reply[2] = list_size;
-  reply[3] = event_ptr->type;
-  reply[4] = event_ptr->tag[0];
-  reply[5] = event_ptr->tag[1];
-  reply[6] = event_ptr->tag[2];
-  reply[7] = event_ptr->tag[3];
-  reply[8] = event_ptr->time;
+  reply[ 2] = list_size;
+  reply[ 3] = event_ptr->type;
+  reply[ 4] = event_ptr->tag[0];
+  reply[ 5] = event_ptr->tag[1];
+  reply[ 6] = event_ptr->tag[2];
+  reply[ 7] = event_ptr->tag[3];
+  reply[ 8] = event_ptr->time >>  0 & 0xFF;
+  reply[ 9] = event_ptr->time >>  8 & 0xFF;
+  reply[10] = event_ptr->time >> 16 & 0xFF;
+  reply[11] = event_ptr->time >> 24 & 0xFF;
   
   // 1 byte was processed for this command
   return 1;
