@@ -6,7 +6,6 @@
 #ifndef __LINKCOMMAND__
 #define __LINKCOMMAND__
 
-#include <EEPROM.h>
 #include "Arduino.h"
 
 #include "nano_rfid_hal.h"

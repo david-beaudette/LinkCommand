@@ -207,7 +207,7 @@ int LinkCommand::tableUpdate(byte *cmd,
 
 /** Process a single check memory command. **/
 int LinkCommand::checkMemory(byte *reply, byte *reply_len) {
-  unsigned int lsb, msb;
+  unsigned long numUsers;
   // Initialize transmit buffer with:
   // [0] the current state of the Arduino
   // [1] the check memory command code 0xA5
@@ -220,11 +220,11 @@ int LinkCommand::checkMemory(byte *reply, byte *reply_len) {
   *reply_len = 6;
   
   // Retrieve table usage
-  _table->getNumUsers(&lsb, &msb);
+  numUsers = _table->getNumUsers();
   reply[2] = (MAX_USER_SIZE & 0xFF00) << 8;
   reply[3] = MAX_USER_SIZE & 0xFF;
-  reply[4] = msb & 0xFF;
-  reply[5] = lsb & 0xFF;
+  reply[4] = (numUsers & 0xFF00) << 8;
+  reply[5] = numUsers & 0xFF;
   /*Serial.print(F("Memory size: MSB "));
   Serial.print(reply[2]);
   Serial.print(F(", LSB "));
